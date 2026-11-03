@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Perch · email-task comparison</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0c1110;
+      --panel: #141c19;
+      --line: #27342e;
+      --muted: #91a197;
+      --text: #e9f1eb;
+      --green: #b6f36a;
+      --yellow: #f4d45c;
+      --red: #ff887f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: radial-gradient(ellipse at 75% -10%, #273a2c 0, transparent 40%), var(--bg);
+      color: var(--text);
+      font: 15px/1.55 "Segoe UI", system-ui, sans-serif;
+    }
+    main { width: min(1000px, calc(100% - 32px)); margin: 0 auto; padding: 34px 0 56px; }
+    .eyebrow { color: var(--green); font: 12px "Cascadia Code", Consolas, monospace; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { margin: 8px 0; font-size: clamp(30px, 5vw, 44px); letter-spacing: -.04em; }
+    h2 { margin: 0; padding: 18px 20px; font-size: 18px; }
+    p { color: #b1beb5; }
+    a { color: var(--green); }
+    .card { margin-top: 18px; overflow: hidden; border: 1px solid var(--line); border-radius: 15px; background: var(--panel); }
+    .status { padding: 18px 20px; border-left: 4px solid var(--yellow); }
+    .status strong, .limits strong { color: var(--text); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 14px; border-top: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-size: 12px; font-weight: 500; }
+    td { font-variant-numeric: tabular-nums; }
+    .limits { padding: 18px 20px; border-top: 1px solid var(--line); color: #afbbb2; }
+    .foot { color: #829087; font-size: 12px; }
+    @media (max-width: 720px) { table { font-size: 12px; } th, td { padding: 9px 7px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">Email task · evidence separated by source</div>
+    <h1>Screenshot and Perch comparison</h1>
+    <p>Task: “Go through my unread emails. Which need a reply from me today? Draft the replies.” The inbox and messages are the made-up task from the repository’s local-only Ubuntu demo.</p>
+
+    <section class="card status">
+      <strong>Windows result: the email task has not been run through the Windows eye.</strong>
+      The installed Windows Perch Virtual Display reports driver version 0.0.0.1. The Windows eye executable’s local self-test passes, but this machine has no local Ollama service running on port 11434, and the Windows eye currently emits visual vectors and change regions—not the email text/semantic layer used by the Ubuntu demo. The metrics below are the saved Ubuntu demo run, not Windows measurements.
+    </section>
+
+    <section class="card">
+      <h2>Recorded Ubuntu demo run</h2>
+      <table>
+        <thead><tr><th>Measure</th><th>Screenshot bot</th><th>Perch bot</th></tr></thead>
+        <tbody>
+          <tr><td>Model / procedure</td><td>gemma-chuck, temperature 0; fixed hands opened the same five unread messages</td><td>Same model and fixed sequence; run after screenshot bot</td></tr>
+          <tr><td>Emails selected for reply</td><td>Priya, Tom, Mum, Bright Smile Dental, Oakfield Primary School</td><td>Priya, Tom, Mum, Bright Smile Dental, Oakfield Primary School</td></tr>
+          <tr><td>Correct selections</td><td>4 of 4; Mum was an extra false positive</td><td>4 of 4; Mum was an extra false positive</td></tr>
+          <tr><td>Model calls / looks</td><td>5 / 10</td><td>5 / 10</td></tr>
+          <tr><td>Billed-style tokens</td><td>42,477</td><td>10,968 (3.9× fewer)</td></tr>
+          <tr><td>Local-model tokens</td><td>15,357</td><td>10,968</td></tr>
+          <tr><td>Wall time</td><td>887.0 s (14 min 47 s)</td><td>417.7 s (6 min 58 s)</td></tr>
+          <tr><td>CPU time (whole machine)</td><td>3,674.3 s</td><td>1,615.8 s</td></tr>
+          <tr><td>CPU package energy</td><td>13.160 kJ</td><td>6.164 kJ</td></tr>
+          <tr><td>Input sent to model</td><td>1,344,072 bytes</td><td>6,224 bytes</td></tr>
+        </tbody>
+      </table>
+      <div class="limits">
+        <strong>Interpretation:</strong> these figures are taken from the saved Ubuntu run’s result record. The demo counts screenshots at 1,365 billed-style tokens each and records local-model tokens separately; energy comes from the CPU package meter and CPU time is whole-machine busy time over each path. This is the repository’s controlled, recorded comparison—not a run performed by this page or by the Windows executable.
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Independent screenshot read in this session</h2>
+      <table>
+        <thead><tr><th>Email</th><th>My classification from the five opened-email screenshots</th><th>Concise draft</th></tr></thead>
+        <tbody>
+          <tr><td>Priya Shah — client-call pricing slide</td><td>Reply before noon today</td><td>I’ll send the final pricing slide and confirm my sign-off before noon, ahead of the 1pm call.</td></tr>
+          <tr><td>Tom Wright — boiler engineer</td><td>Reply by 6pm today</td><td>I confirm someone will be home tomorrow, Friday, between 9 and 11 to let the gas engineer in.</td></tr>
+          <tr><td>Mum — Sunday lunch</td><td>Not today; reply by Saturday</td><td>Not selected for a reply today.</td></tr>
+          <tr><td>Bright Smile Dental — appointment</td><td>Reply YES today</td><td>Yes, please confirm my appointment for Monday 10 November at 10:30. Thank you.</td></tr>
+          <tr><td>Oakfield Primary School — museum trip</td><td>Reply by the end of today</td><td>I consent to the Year 4 museum trip and will arrange the £8 payment today.</td></tr>
+        </tbody>
+      </table>
+      <div class="limits"><strong>Not an instrumented bot run:</strong> this session’s screenshot interpretation was not timed, did not invoke the demo’s model/runtime, and has no independently measured token, CPU, or energy figures. It correctly excluded Mum; the saved screenshot and Perch bots both included Mum.</div>
+    </section>
+
+    <p class="foot"><a href="/">Return to the Windows local benchmark</a>. This page is served only by the Windows loopback and private/NAT demo listeners; it does not fetch or publish the confidential demo site.</p>
+  </main>
+</body>
+</html>

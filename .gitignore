@@ -1,0 +1,6 @@
+windows/bin/
+windows/obj/
+windows/idd/obj/
+windows/idd/x64/
+__pycache__/
+*.py[cod]

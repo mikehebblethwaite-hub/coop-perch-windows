@@ -1,0 +1,66 @@
+;
+; Copyright (c) 2026 Mike J Hebblethwaite. All rights reserved. See ../../COPYRIGHT.
+; Perch Indirect Display Driver. Installation requires an appropriately signed package.
+;
+[Version]
+PnpLockDown=1
+Signature="$Windows NT$"
+ClassGUID={4D36E968-E325-11CE-BFC1-08002BE10318}
+Class=Display
+ClassVer=2.0
+Provider=%Provider%
+CatalogFile=PerchIddDriver.cat
+DriverVer=11/02/2026,0.0.0.1
+
+[Manufacturer]
+%Provider%=Models,NTamd64.10.0...22000
+
+[Models.NTamd64.10.0...22000]
+%DeviceName%=DeviceInstall,Root\PerchIdd
+
+[SourceDisksFiles]
+PerchIddDriver.dll=1
+
+[SourceDisksNames]
+1=%DiskName%
+
+[DeviceInstall.NT]
+Include=WUDFRD.inf
+Needs=WUDFRD.NT
+CopyFiles=DriverCopy
+
+[DeviceInstall.NT.HW]
+Include=WUDFRD.inf
+Needs=WUDFRD.NT.HW
+AddReg=DeviceHardwareSettings
+
+[DeviceHardwareSettings]
+HKR,,UpperFilters,%REG_MULTI_SZ%,"IndirectKmd"
+HKR,"WUDF","DeviceGroupId",%REG_SZ%,"PerchIddDriverGroup"
+
+[DeviceInstall.NT.Services]
+Include=WUDFRD.inf
+Needs=WUDFRD.NT.Services
+
+[DeviceInstall.NT.Wdf]
+UmdfService=PerchIddDriver,PerchIddDriver_Install
+UmdfServiceOrder=PerchIddDriver
+UmdfKernelModeClientPolicy=AllowKernelModeClients
+
+[PerchIddDriver_Install]
+UmdfLibraryVersion=$UMDFVERSION$
+ServiceBinary=%12%\UMDF\PerchIddDriver.dll
+UmdfExtensions=IddCx0102
+
+[DestinationDirs]
+DriverCopy=12,UMDF
+
+[DriverCopy]
+PerchIddDriver.dll
+
+[Strings]
+Provider="Perch"
+DiskName="Perch Indirect Display Driver"
+DeviceName="Perch Virtual Display"
+REG_MULTI_SZ=0x00010000
+REG_SZ=0x00000000

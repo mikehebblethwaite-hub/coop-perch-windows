@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Perch · 20 minute vision benchmark</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0c1110;
+      --panel: #141c19;
+      --line: #27342e;
+      --muted: #91a197;
+      --text: #e9f1eb;
+      --green: #b6f36a;
+      --yellow: #f4d45c;
+      --red: #ff887f;
+      --blue: #7dd3fc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 75% -10%, #273a2c 0, transparent 40%), var(--bg);
+      color: var(--text);
+      font: 14px/1.5 "Segoe UI", system-ui, sans-serif;
+    }
+    main { width: min(1120px, calc(100% - 32px)); margin: 0 auto; padding: 28px 0 52px; }
+    header { display: flex; align-items: center; gap: 12px; margin-bottom: 36px; }
+    .mark { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid #536a4a; border-radius: 12px; color: var(--green); background: #1d2b20; font-size: 19px; font-weight: 750; }
+    .brand { font-weight: 700; letter-spacing: .03em; }
+    .local { margin-left: auto; color: var(--muted); font: 12px "Cascadia Code", Consolas, monospace; }
+    .eyebrow { color: var(--green); font: 12px "Cascadia Code", Consolas, monospace; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { margin: 8px 0; font-size: clamp(30px, 5vw, 44px); line-height: 1.1; letter-spacing: -.04em; }
+    .intro { max-width: 780px; color: #b1beb5; font-size: 16px; }
+    .card { border: 1px solid var(--line); border-radius: 15px; background: color-mix(in srgb, var(--panel) 95%, transparent); }
+    .task { display: flex; align-items: center; gap: 20px; margin-top: 22px; padding: 18px 20px; }
+    .task-copy { flex: 1; }
+    .task-copy strong { display: block; margin-bottom: 4px; font-size: 16px; }
+    .task-copy span { color: #aab8ae; }
+    button { flex: 0 0 auto; border: 0; border-radius: 9px; padding: 11px 16px; background: var(--green); color: #11190f; font: 700 14px "Segoe UI", system-ui, sans-serif; cursor: pointer; }
+    button:hover { background: #cbff83; }
+    button:disabled { opacity: .6; cursor: default; }
+    .progress-card { margin-top: 16px; padding: 16px 20px; }
+    .progress-top { display: flex; justify-content: space-between; gap: 12px; color: var(--muted); font: 12px "Cascadia Code", Consolas, monospace; }
+    .progress-track { height: 8px; overflow: hidden; margin-top: 10px; border-radius: 10px; background: #28332d; }
+    .progress-fill { width: 0; height: 100%; background: var(--green); transition: width .2s linear; }
+    .methods { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    .method { min-width: 0; overflow: hidden; }
+    .method-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+    .method-head h2 { margin: 0; font-size: 16px; }
+    .method-head span { color: var(--muted); font: 11px "Cascadia Code", Consolas, monospace; }
+    canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; background: #11191a; }
+    .method-status { padding: 10px 16px; color: #aab8ae; font-size: 12px; }
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 16px; }
+    .metric { padding: 15px 18px; border-right: 1px solid var(--line); }
+    .metric:last-child { border-right: 0; }
+    .metric strong { display: block; font-size: 21px; }
+    .metric span { color: var(--muted); font-size: 12px; }
+    .report { display: none; margin-top: 16px; }
+    .report.visible { display: block; }
+    .report-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+    .report-head h2 { margin: 0; padding: 16px 18px; font-size: 17px; }
+    .report-head button { margin-right: 14px; padding: 8px 11px; font-size: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 11px 14px; border-top: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-size: 12px; font-weight: 500; }
+    td { font-variant-numeric: tabular-nums; }
+    .ok { color: var(--green); }
+    .pending { color: var(--yellow); }
+    .note { margin-top: 15px; padding: 15px 18px; color: #aab8ae; font-size: 12px; }
+    .note strong { color: var(--text); }
+    .history { margin-top: 16px; padding: 16px 18px; }
+    .history h2 { margin: 0 0 12px; font-size: 16px; }
+    #samples { display: flex; align-items: end; gap: 4px; min-height: 70px; }
+    .sample { display: flex; flex: 1; min-width: 5px; flex-direction: column; justify-content: end; gap: 2px; height: 70px; }
+    .bar { min-height: 1px; border-radius: 2px 2px 0 0; }
+    .bar.screen { background: var(--blue); }
+    .bar.perch { background: var(--green); }
+    .foot { color: #829087; font-size: 12px; }
+    @media (max-width: 760px) {
+      header { margin-bottom: 26px; }
+      .methods { grid-template-columns: 1fr; }
+      .task { align-items: flex-start; flex-direction: column; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .metric:nth-child(2) { border-right: 0; }
+      .metric:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      table { font-size: 12px; }
+      th, td { padding: 9px 7px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="mark" aria-hidden="true">P</div>
+      <div class="brand">PERCH <span style="color:var(--muted);font-weight:400">/ WINDOWS BENCHMARK</span></div>
+      <div class="local">LOCAL ONLY · 20 MIN</div>
+    </header>
+
+    <div class="eyebrow">Autonomous visual task · same bot policy</div>
+    <h1>Sort the moving parcels.</h1>
+    <p class="intro">Two autonomous vision paths watch identical moving conveyor scenes. Each must find red parcels entering the sorting zone and route them to the dispatch tray. No detections or answers are typed in by a person.</p>
+    <p><a href="/email-results.html">View the recorded email-task comparison and Windows validation status</a></p>
+
+    <section class="card task">
+      <div class="task-copy">
+        <strong>20-minute continuous run</strong>
+        <span>Screenshot bot: encode and scan a full PNG image every 100 ms. Perch path: compare frames on a 16×10 grid and act from changed-cell events. Both use the same target rule and moving-object schedule.</span>
+      </div>
+      <button id="start" type="button">Start 20-minute test</button>
+    </section>
+
+    <section class="card progress-card" aria-live="polite">
+      <div class="progress-top"><span id="run-state">Ready · task is fully automated after start</span><span id="clock">00:00 / 20:00</span></div>
+      <div class="progress-track"><div id="progress" class="progress-fill"></div></div>
+    </section>
+
+    <section class="methods" aria-label="Live task methods">
+      <article class="card method">
+        <div class="method-head"><h2>Screenshot bot</h2><span>full image → visual scan</span></div>
+        <canvas id="screen-scene" width="320" height="200" aria-label="Screenshot bot's moving parcel scene"></canvas>
+        <div id="screen-status" class="method-status">Waiting to start.</div>
+      </article>
+      <article class="card method">
+        <div class="method-head"><h2>Perch event bot</h2><span>frame diff → grid events</span></div>
+        <canvas id="perch-scene" width="320" height="200" aria-label="Perch bot's identical moving parcel scene"></canvas>
+        <div id="perch-status" class="method-status">Waiting to start.</div>
+      </article>
+    </section>
+
+    <section class="metrics">
+      <div class="card metric"><strong id="elapsed">0:00</strong><span>elapsed run time</span></div>
+      <div class="card metric"><strong id="screenshots">0</strong><span>full screenshots analyzed</span></div>
+      <div class="card metric"><strong id="frames">0</strong><span>Perch frames processed</span></div>
+      <div class="card metric"><strong id="agreement">—</strong><span>task result agreement</span></div>
+    </section>
+
+    <section class="card history">
+      <h2>Vision-path elapsed time by minute <span style="color:var(--muted);font-size:12px;font-weight:400">(includes screenshot PNG encode/decode; not CPU counters)</span></h2>
+      <div id="samples" aria-label="Per-minute vision path elapsed time chart"></div>
+    </section>
+
+    <section id="report" class="card report">
+      <div class="report-head">
+        <h2>20-minute test results</h2>
+        <button id="download-report" type="button" hidden>Download HTML report</button>
+      </div>
+      <table>
+        <thead><tr><th>Measure</th><th>Screenshot bot</th><th>Perch event bot</th><th>Comparison</th></tr></thead>
+        <tbody>
+          <tr><td>Red parcels correctly sorted</td><td id="r-screen-sorted">—</td><td id="r-perch-sorted">—</td><td id="r-sorted-diff">—</td></tr>
+          <tr><td>Missed target parcels</td><td id="r-screen-missed">—</td><td id="r-perch-missed">—</td><td id="r-missed-diff">—</td></tr>
+          <tr><td>Vision-path elapsed time</td><td id="r-screen-cpu">—</td><td id="r-perch-cpu">—</td><td id="r-cpu-diff">—</td></tr>
+          <tr><td>Input / change data processed</td><td id="r-screen-data">—</td><td id="r-perch-data">—</td><td id="r-data-diff">—</td></tr>
+          <tr><td>AI model tokens</td><td>Not measured</td><td>Not measured</td><td>No model is called by this pixel-processing benchmark</td></tr>
+          <tr><td>OS process CPU time</td><td>Not measured</td><td>Not measured</td><td>The browser page cannot read Windows per-process CPU counters</td></tr>
+          <tr><td>Energy / watts</td><td>Not measured</td><td>Not measured</td><td>No per-process power meter is exposed to this local test</td></tr>
+        </tbody>
+      </table>
+      <div class="note">
+        <strong>Measurement limits:</strong> these are local, automated pixel-processing bots, not an LLM-driven bot; no AI model tokens are generated or measured. The screenshot timing includes asynchronous PNG encoding/decoding and pixel scanning, so it is path wall time—not CPU time or hardware watts. The Perch path simulates the Windows eye's 16×10 changed-cell format on generated frames; it does not read the installed driver's live feed. Results compare this repeatable vision task, not total real-agent CPU, power, or token costs.
+      </div>
+    </section>
+    <p class="foot">The benchmark runs only in this browser on localhost. Encoded screenshots are analyzed locally and discarded after their byte count is recorded. No screenshots are uploaded or retained.</p>
+  </main>
+  <script>
+    (() => {
+      "use strict";
+      const RUN_MS = 20 * 60 * 1000;
+      const FRAME_MS = 100;
+      const W = 320;
+      const H = 200;
+      const CELL_W = 20;
+      const CELL_H = 20;
+      const LANES = [1, 3, 5, 7, 9];
+      const STEP_MS = 450;
+      const LOOP_CELLS = 20;
+      const GATE_FIRST = 6;
+      const GATE_LAST = 8;
+      const COLORS = [
+        { name: "red", rgb: [236, 70, 67] },
+        { name: "blue", rgb: [76, 158, 232] },
+        { name: "gold", rgb: [243, 193, 65] },
+        { name: "green", rgb: [87, 190, 122] },
+      ];
+      const BACKGROUND = [24, 36, 48];
+      const $ = (id) => document.getElementById(id);
+      const screenshotCanvas = $("screen-scene");
+      const perchCanvas = $("perch-scene");
+      const screenshotContext = screenshotCanvas.getContext("2d", { willReadFrequently: true });
+      const perchContext = perchCanvas.getContext("2d", { willReadFrequently: true });
+      const screenshotDecoder = document.createElement("canvas");
+      screenshotDecoder.width = W;
+      screenshotDecoder.height = H;
+      const screenshotDecoderContext = screenshotDecoder.getContext("2d", { willReadFrequently: true });
+      const samples = $("samples");
+
+      const state = {
+        started: false,
+        startTime: 0,
+        timer: null,
+        screenshotPathMs: 0,
+        perchPathMs: 0,
+        screenshotBytes: 0,
+        perchInputBytes: 0,
+        perchEventBytes: 0,
+        screenshotCount: 0,
+        frameCount: 0,
+        screenshotSorted: new Set(),
+        perchSorted: new Set(),
+        screenshotMissed: new Set(),
+        perchMissed: new Set(),
+        previousPixels: null,
+        perchCells: new Array(160).fill(null),
+        lastMinute: -1,
+        minuteSamples: [],
+        lastSampleScreenPathMs: 0,
+        lastSamplePerchPathMs: 0,
+      };
+
+      function parcelAt(laneIndex, tick) {
+        const offset = laneIndex * 3;
+        const position = tick + offset;
+        const cycle = Math.floor(position / LOOP_CELLS);
+        const cell = position % LOOP_CELLS - 2;
+        const color = COLORS[(laneIndex + cycle * 3) % COLORS.length];
+        return { laneIndex, cycle, cell, color, key: `${laneIndex}:${cycle}` };
+      }
+
+      function paintScene(context, tick, sorted) {
+        context.fillStyle = `rgb(${BACKGROUND.join(",")})`;
+        context.fillRect(0, 0, W, H);
+        context.fillStyle = "#26342e";
+        context.fillRect(0, 0, W, 18);
+        context.fillStyle = "#b6f36a";
+        context.font = "bold 9px Consolas, monospace";
+        context.fillText("RED LABEL → RED TRAY", 8, 12);
+        context.fillStyle = "#4a2928";
+        context.fillRect(126, 20, 54, 178);
+        context.strokeStyle = "#7b4841";
+        context.setLineDash([3, 3]);
+        context.beginPath();
+        context.moveTo(153, 20);
+        context.lineTo(153, 198);
+        context.stroke();
+        context.setLineDash([]);
+        context.fillStyle = "#f4d45c";
+        context.font = "8px Consolas, monospace";
+        context.fillText("SORT ZONE", 129, 28);
+        for (let laneIndex = 0; laneIndex < LANES.length; laneIndex += 1) {
+          const row = LANES[laneIndex];
+          const y = row * CELL_H;
+          context.fillStyle = "#202d28";
+          context.fillRect(0, y + 1, W, CELL_H - 2);
+          context.fillStyle = "#91a197";
+          context.font = "8px Consolas, monospace";
+          context.fillText(`L${laneIndex + 1}`, 3, y + 8);
+          const item = parcelAt(laneIndex, tick);
+          if (item.cell < 0 || item.cell >= 16 || sorted.has(item.key)) continue;
+          const x = item.cell * CELL_W + 2;
+          const parcelY = y + 2;
+          context.fillStyle = `rgb(${item.color.rgb.join(",")})`;
+          context.fillRect(x, parcelY, 16, 16);
+          context.fillStyle = "#11191a";
+          context.font = "bold 8px Consolas, monospace";
+          context.fillText(item.color.name[0].toUpperCase(), x + 5, parcelY + 11);
+        }
+        context.fillStyle = "#2d4934";
+        context.fillRect(256, 20, 62, 178);
+        context.strokeStyle = "#79a36c";
+        context.strokeRect(258, 22, 58, 174);
+        context.fillStyle = "#b6f36a";
+        context.font = "bold 9px Consolas, monospace";
+        context.fillText("RED TRAY", 269, 34);
+        context.fillStyle = "#d6e5d6";
+        context.font = "8px Consolas, monospace";
+        context.fillText(`${sorted.size} sorted`, 270, 48);
+      }
+
+      function detectScreenshot(pixels, tick) {
+        const redGateLanes = new Set();
+        const data = pixels.data;
+        for (let laneIndex = 0; laneIndex < LANES.length; laneIndex += 1) {
+          const row = LANES[laneIndex];
+          for (let y = row * CELL_H + 2; y < (row + 1) * CELL_H - 2; y += 1) {
+            for (let x = GATE_FIRST * CELL_W; x < (GATE_LAST + 1) * CELL_W; x += 1) {
+              const offset = (y * W + x) * 4;
+              if (data[offset] > 185 && data[offset + 1] < 115 && data[offset + 2] < 115) {
+                redGateLanes.add(laneIndex);
+                break;
+              }
+            }
+            if (redGateLanes.has(laneIndex)) break;
+          }
+        }
+        const detected = new Set();
+        for (const laneIndex of redGateLanes) {
+          const parcel = parcelAt(laneIndex, tick);
+          detected.add(parcel.key);
+        }
+        return detected;
+      }
+
+      function updatePerchCells(pixels) {
+        const changed = [];
+        const data = pixels.data;
+        for (let row = 0; row < 10; row += 1) {
+          for (let col = 0; col < 16; col += 1) {
+            let differs = state.previousPixels === null;
+            if (!differs) {
+              const x0 = col * CELL_W;
+              const y0 = row * CELL_H;
+              for (let y = y0; y < y0 + CELL_H && !differs; y += 1) {
+                for (let x = x0; x < x0 + CELL_W; x += 1) {
+                  const offset = (y * W + x) * 4;
+                  if (data[offset] !== state.previousPixels[offset] ||
+                      data[offset + 1] !== state.previousPixels[offset + 1] ||
+                      data[offset + 2] !== state.previousPixels[offset + 2]) {
+                    differs = true;
+                    break;
+                  }
+                }
+              }
+            }
+            if (!differs) continue;
+            const x = col * CELL_W + 4;
+            const y = row * CELL_H + 4;
+            const offset = (y * W + x) * 4;
+            let color = null;
+            for (const candidate of COLORS) {
+              if (Math.abs(data[offset] - candidate.rgb[0]) < 4 &&
+                  Math.abs(data[offset + 1] - candidate.rgb[1]) < 4 &&
+                  Math.abs(data[offset + 2] - candidate.rgb[2]) < 4) {
+                color = candidate.name;
+                break;
+              }
+            }
+            state.perchCells[row * 16 + col] = color;
+            changed.push(row * 16 + col);
+          }
+        }
+        state.previousPixels = new Uint8ClampedArray(data);
+        return changed;
+      }
+
+      function detectPerch(tick) {
+        const detected = new Set();
+        for (let laneIndex = 0; laneIndex < LANES.length; laneIndex += 1) {
+          const row = LANES[laneIndex];
+          for (let col = GATE_FIRST; col <= GATE_LAST; col += 1) {
+            if (state.perchCells[row * 16 + col] !== "red") continue;
+            detected.add(parcelAt(laneIndex, tick).key);
+          }
+        }
+        return detected;
+      }
+
+      function drawSamples() {
+        samples.replaceChildren();
+        const max = Math.max(1, ...state.minuteSamples.map((sample) => Math.max(sample.screen, sample.perch)));
+        for (const sample of state.minuteSamples) {
+          const column = document.createElement("div");
+          column.className = "sample";
+          column.title = `Minute ${sample.minute}: screenshot ${sample.screen.toFixed(1)} ms, Perch ${sample.perch.toFixed(1)} ms`;
+          for (const [name, value] of [["screen", sample.screen], ["perch", sample.perch]]) {
+            const bar = document.createElement("span");
+            bar.className = `bar ${name}`;
+            bar.style.height = `${Math.max(1, value / max * 62)}px`;
+            column.append(bar);
+          }
+          samples.append(column);
+        }
+      }
+
+      function updateUi(elapsedMs, tick, screenshotBytesThisTick, perchEvents) {
+        const elapsedSeconds = Math.floor(elapsedMs / 1000);
+        const minute = Math.floor(elapsedMs / 60000);
+        $("clock").textContent = `${String(Math.floor(elapsedSeconds / 60)).padStart(2, "0")}:${String(elapsedSeconds % 60).padStart(2, "0")} / 20:00`;
+        $("elapsed").textContent = `${Math.floor(elapsedSeconds / 60)}:${String(elapsedSeconds % 60).padStart(2, "0")}`;
+        $("progress").style.width = `${Math.min(100, elapsedMs / RUN_MS * 100)}%`;
+        $("screenshots").textContent = state.screenshotCount.toLocaleString();
+        $("frames").textContent = state.frameCount.toLocaleString();
+        $("agreement").textContent = `${state.screenshotSorted.size === state.perchSorted.size ? "MATCH" : "CHECK"} · ${state.screenshotSorted.size} / ${state.perchSorted.size}`;
+        $("screen-status").textContent = `${state.screenshotSorted.size} red parcels sorted · ${screenshotBytesThisTick.toLocaleString()} B last screenshot`;
+        $("perch-status").textContent = `${state.perchSorted.size} red parcels sorted · ${perchEvents} changed cells this frame`;
+
+        if (minute !== state.lastMinute) {
+          state.lastMinute = minute;
+          state.minuteSamples.push({
+            minute,
+            screen: state.screenshotPathMs - state.lastSampleScreenPathMs,
+            perch: state.perchPathMs - state.lastSamplePerchPathMs,
+          });
+          state.lastSampleScreenPathMs = state.screenshotPathMs;
+          state.lastSamplePerchPathMs = state.perchPathMs;
+          drawSamples();
+        }
+
+        if (elapsedMs >= RUN_MS) finish();
+      }
+
+      function finish() {
+        if (!state.started) return;
+        clearInterval(state.timer);
+        state.started = false;
+        $("start").disabled = false;
+        $("start").textContent = "Run another 20-minute test";
+        $("run-state").textContent = "Complete · both autonomous bots finished the same 20-minute task";
+        $("clock").textContent = "20:00 / 20:00";
+        $("progress").style.width = "100%";
+        $("agreement").textContent = state.screenshotSorted.size === state.perchSorted.size ? "MATCH" : "DIFFER";
+
+        const screenCpu = state.screenshotPathMs;
+        const perchCpu = state.perchPathMs;
+        const screenData = state.screenshotBytes;
+        const perchData = state.perchEventBytes;
+        $("r-screen-sorted").textContent = state.screenshotSorted.size.toLocaleString();
+        $("r-perch-sorted").textContent = state.perchSorted.size.toLocaleString();
+        $("r-sorted-diff").textContent = state.screenshotSorted.size === state.perchSorted.size ? "Same task count" : `${Math.abs(state.screenshotSorted.size - state.perchSorted.size)} difference`;
+        $("r-screen-missed").textContent = state.screenshotMissed.size.toLocaleString();
+        $("r-perch-missed").textContent = state.perchMissed.size.toLocaleString();
+        $("r-missed-diff").textContent = state.screenshotMissed.size === state.perchMissed.size ? "Same" : `${Math.abs(state.screenshotMissed.size - state.perchMissed.size)} difference`;
+        $("r-screen-cpu").textContent = `${(screenCpu / 1000).toFixed(2)} s processing time`;
+        $("r-perch-cpu").textContent = `${(perchCpu / 1000).toFixed(2)} s processing time`;
+        $("r-cpu-diff").textContent = perchCpu <= screenCpu
+          ? `${((1 - perchCpu / Math.max(1, screenCpu)) * 100).toFixed(1)}% less analysis time`
+          : `${((perchCpu / Math.max(1, screenCpu) - 1) * 100).toFixed(1)}% more analysis time`;
+        $("r-screen-data").textContent = `${(screenData / 1024 / 1024).toFixed(2)} MiB PNG`;
+        $("r-perch-data").textContent = `${(perchData / 1024).toFixed(2)} KiB event vectors; ${(state.perchInputBytes / 1024 / 1024).toFixed(0)} MiB local frames`;
+        $("r-data-diff").textContent = `${(screenData / Math.max(1, perchData)).toFixed(1)}× PNG/event bytes`;
+        $("report").classList.add("visible");
+        $("download-report").hidden = false;
+        window.localStorage.setItem("perch-20m-benchmark", JSON.stringify({
+          completedAt: new Date().toISOString(),
+          screenshotSorted: state.screenshotSorted.size,
+          perchSorted: state.perchSorted.size,
+          screenshotPathMs: screenCpu,
+          perchPathMs: perchCpu,
+          screenshotBytes: screenData,
+          perchEventBytes: perchData,
+          screenshotCount: state.screenshotCount,
+          frameCount: state.frameCount,
+          tokensMeasured: false,
+          energyMeasured: false,
+        }));
+      }
+
+      function stopWithError(error) {
+        if (!state.started) return;
+        state.started = false;
+        clearTimeout(state.timer);
+        $("start").disabled = false;
+        $("run-state").textContent = `Stopped · ${error.message || String(error)}`;
+      }
+
+      function scheduleTick(delay) {
+        state.timer = setTimeout(() => {
+          tick().catch(stopWithError);
+        }, delay);
+      }
+
+      async function tick() {
+        if (!state.started) return;
+        const now = performance.now();
+        const elapsedMs = Math.min(RUN_MS, now - state.startTime);
+        const taskTick = Math.floor(elapsedMs / STEP_MS);
+        paintScene(screenshotContext, taskTick, state.screenshotSorted);
+        paintScene(perchContext, taskTick, state.perchSorted);
+        const perchPixels = perchContext.getImageData(0, 0, W, H);
+
+        const screenshotStart = performance.now();
+        const screenshotBlob = await new Promise((resolve) => screenshotCanvas.toBlob(resolve, "image/png"));
+        if (!screenshotBlob) throw new Error("Could not encode the screenshot frame.");
+        const screenshotBitmap = await createImageBitmap(screenshotBlob);
+        screenshotDecoderContext.clearRect(0, 0, W, H);
+        screenshotDecoderContext.drawImage(screenshotBitmap, 0, 0);
+        screenshotBitmap.close();
+        const screenshotPixels = screenshotDecoderContext.getImageData(0, 0, W, H);
+        const screenshotDetections = detectScreenshot(screenshotPixels, taskTick);
+        for (const key of screenshotDetections) state.screenshotSorted.add(key);
+        state.screenshotPathMs += performance.now() - screenshotStart;
+        state.screenshotBytes += screenshotBlob.size;
+        state.screenshotCount += 1;
+
+        const perchStart = performance.now();
+        const changedCells = updatePerchCells(perchPixels);
+        const perchDetections = detectPerch(taskTick);
+        for (const key of perchDetections) state.perchSorted.add(key);
+        state.perchPathMs += performance.now() - perchStart;
+        state.perchInputBytes += W * H * 4;
+        state.perchEventBytes += changedCells.length * 24;
+        state.frameCount += 1;
+
+        for (let lane = 0; lane < LANES.length; lane += 1) {
+          const item = parcelAt(lane, taskTick);
+          if (item.color.name !== "red" || item.cell !== GATE_LAST + 1) continue;
+          if (!state.screenshotSorted.has(item.key)) state.screenshotMissed.add(item.key);
+          if (!state.perchSorted.has(item.key)) state.perchMissed.add(item.key);
+        }
+
+        updateUi(elapsedMs, taskTick, screenshotBlob.size, changedCells.length);
+        if (state.started) scheduleTick(FRAME_MS);
+      }
+
+      function resetRun() {
+        state.screenshotPathMs = 0;
+        state.perchPathMs = 0;
+        state.screenshotBytes = 0;
+        state.perchInputBytes = 0;
+        state.perchEventBytes = 0;
+        state.screenshotCount = 0;
+        state.frameCount = 0;
+        state.screenshotSorted = new Set();
+        state.perchSorted = new Set();
+        state.screenshotMissed = new Set();
+        state.perchMissed = new Set();
+        state.previousPixels = null;
+        state.perchCells = new Array(160).fill(null);
+        state.lastMinute = -1;
+        state.minuteSamples = [];
+        state.lastSampleScreenPathMs = 0;
+        state.lastSamplePerchPathMs = 0;
+        $("report").classList.remove("visible");
+        $("download-report").hidden = true;
+        $("run-state").textContent = "Running · automated task; no manual detections";
+        $("clock").textContent = "00:00 / 20:00";
+        $("elapsed").textContent = "0:00";
+        $("progress").style.width = "0";
+        $("screenshots").textContent = "0";
+        $("frames").textContent = "0";
+        $("agreement").textContent = "—";
+        $("screen-status").textContent = "Starting screenshot vision…";
+        $("perch-status").textContent = "Starting Perch grid-delta processing…";
+        samples.replaceChildren();
+      }
+
+      $("start").addEventListener("click", () => {
+        if (state.started) return;
+        resetRun();
+        state.started = true;
+        state.startTime = performance.now();
+        $("start").disabled = true;
+        scheduleTick(0);
+      });
+
+      $("download-report").addEventListener("click", () => {
+        const clone = document.documentElement.cloneNode(true);
+        clone.querySelectorAll("script").forEach((script) => script.remove());
+        for (const [source, replacement] of [
+          [screenshotCanvas, clone.querySelector("#screen-scene")],
+          [perchCanvas, clone.querySelector("#perch-scene")],
+        ]) {
+          const image = document.createElement("img");
+          image.src = source.toDataURL("image/png");
+          image.width = W;
+          image.height = H;
+          image.style.cssText = "display:block;width:100%;height:auto;image-rendering:pixelated;background:#11191a";
+          replacement.replaceWith(image);
+        }
+        const blob = new Blob([`<!doctype html>\n${clone.outerHTML}`], { type: "text/html" });
+        const anchor = document.createElement("a");
+        anchor.href = URL.createObjectURL(blob);
+        anchor.download = "perch-20-minute-benchmark.html";
+        anchor.click();
+        setTimeout(() => URL.revokeObjectURL(anchor.href), 1000);
+        tick();
+      });
+
+      paintScene(screenshotContext, 0, state.screenshotSorted);
+      paintScene(perchContext, 0, state.perchSorted);
+    })();
+  </script>
+</body>
+</html>

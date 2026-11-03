@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Perch · 20 minute benchmark results</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0c1110;
+      --panel: #141c19;
+      --line: #27342e;
+      --muted: #91a197;
+      --text: #e9f1eb;
+      --green: #b6f36a;
+      --yellow: #f4d45c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 75% -10%, #273a2c 0, transparent 40%), var(--bg);
+      color: var(--text);
+      font: 15px/1.5 "Segoe UI", system-ui, sans-serif;
+    }
+    main { width: min(940px, calc(100% - 32px)); margin: 0 auto; padding: 34px 0 56px; }
+    .eyebrow { color: var(--green); font: 12px "Cascadia Code", Consolas, monospace; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { margin: 8px 0; font-size: clamp(30px, 5vw, 44px); letter-spacing: -.04em; }
+    .intro { color: #b1beb5; font-size: 16px; }
+    .card { margin-top: 18px; overflow: hidden; border: 1px solid var(--line); border-radius: 15px; background: var(--panel); }
+    .summary { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .metric { padding: 18px; border-right: 1px solid var(--line); }
+    .metric:last-child { border-right: 0; }
+    .metric strong { display: block; font-size: 22px; color: var(--green); }
+    .metric span { color: var(--muted); font-size: 12px; }
+    h2 { margin: 0; padding: 18px 20px; font-size: 18px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px 14px; border-top: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-size: 12px; font-weight: 500; }
+    td { font-variant-numeric: tabular-nums; }
+    .limits { padding: 18px 20px; border-top: 1px solid var(--line); color: #afbbb2; }
+    .limits strong { color: var(--text); }
+    .foot { color: #829087; font-size: 12px; }
+    @media (max-width: 700px) {
+      .summary { grid-template-columns: repeat(2, 1fr); }
+      .metric:nth-child(2) { border-right: 0; }
+      .metric:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+      table { font-size: 12px; }
+      th, td { padding: 9px 7px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="eyebrow">Local Windows benchmark · completed 2026-11-03 05:40 UTC</div>
+    <h1>Moving parcel sorting</h1>
+    <p class="intro">Twenty minutes, 9,986 paired frames, same conveyor scene and sorting rule. Neither path received manually entered detections.</p>
+
+    <section class="card summary" aria-label="Run summary">
+      <div class="metric"><strong>20:00</strong><span>test duration</span></div>
+      <div class="metric"><strong>167 / 167</strong><span>red parcels sorted, screenshot / Perch</span></div>
+      <div class="metric"><strong>0 / 0</strong><span>missed target parcels</span></div>
+      <div class="metric"><strong>9,986</strong><span>frames per vision path</span></div>
+    </section>
+
+    <section class="card">
+      <h2>Measured results</h2>
+      <table>
+        <thead>
+          <tr><th>Measure</th><th>Screenshot vision path</th><th>Perch-style event path</th><th>Comparison</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Task result</td><td>167 sorted, 0 missed</td><td>167 sorted, 0 missed</td><td>Same result</td>
+          </tr>
+          <tr>
+            <td>Vision-path elapsed time</td><td>154.663 s</td><td>8.626 s</td><td>94.4% less elapsed time for Perch-style processing</td>
+          </tr>
+          <tr>
+            <td>Vision input / output volume</td><td>65.96 MiB of encoded PNG screenshots</td><td>369.00 KiB of 24-byte changed-cell records</td><td>183.0× difference in encoded/event bytes</td>
+          </tr>
+          <tr>
+            <td>Raw frame feed read locally</td><td>Not applicable</td><td>2,438 MiB of generated RGBA frame data</td><td>Memory feed volume, not data sent to a model</td>
+          </tr>
+          <tr>
+            <td>AI model tokens</td><td>Not measured</td><td>Not measured</td><td>No AI model was called</td>
+          </tr>
+          <tr>
+            <td>Windows process CPU time</td><td>Not measured</td><td>Not measured</td><td>Browser benchmark does not read OS process counters</td>
+          </tr>
+          <tr>
+            <td>Power / energy</td><td>Not measured</td><td>Not measured</td><td>No hardware power meter was sampled</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="limits">
+        <strong>How to interpret this:</strong> these are two local, automated pixel-processing algorithms—not an LLM agent versus an LLM agent. The screenshot path encodes each full frame as PNG, decodes it, then scans the sorting lanes. The Perch-style path diffs each frame into 16×10 cells and processes changed-cell records. The elapsed-time figures include screenshot encode/decode latency and are not CPU-time counters. The Perch path is a browser simulation of the Windows eye format on generated moving frames; it is not a measurement from the installed IddCx feed or a physical display. Therefore this run does not establish real agent token savings, total system CPU savings, or energy savings.
+      </div>
+    </section>
+
+    <p class="foot">Completed 2026-11-03 05:40:09 UTC. Run data is local to this Windows benchmark. No screenshot was uploaded.</p>
+  </main>
+</body>
+</html>
